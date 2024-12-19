@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主機： localhost:8889
--- 產生時間： 2024 年 12 月 19 日 11:56
+-- 產生時間： 2024 年 12 月 19 日 19:10
 -- 伺服器版本： 8.0.35
 -- PHP 版本： 8.2.20
 
@@ -128,7 +128,7 @@ CREATE TABLE `instructors` (
 --
 
 INSERT INTO `instructors` (`eid`, `name`, `tel`, `job_rank`, `department`) VALUES
-('E001', '張一', '0911111111', '教授', 'CS'),
+('E001', '張一', '0911111112', '教授', 'CS'),
 ('E002', '李二', '0922222222', '副教授', 'CS'),
 ('E003', '王三', '0933333333', '助理教授', 'CS'),
 ('E004', '陳四', '0944444444', '教授', 'CS'),
@@ -181,7 +181,7 @@ INSERT INTO `record` (`r_id`, `sid`, `award_type`, `award_date`, `description`, 
 (1, '0001', '嘉獎', '2023-10-15 00:00:00', '擔任班級幹部表現優良', 2),
 (2, '0002', '小功', '2023-11-20 00:00:00', '參與校外比賽獲獎', 1),
 (3, '0003', '警告', '2023-12-01 00:00:00', '上課遲到', 1),
-(4, '0001', '大功', '2024-01-10 00:00:00', '參與國際競賽獲得佳作', 1);
+(4, '0001', '大功', '2024-01-10 00:00:00', '參與國際競賽獲得佳作', 2);
 
 -- --------------------------------------------------------
 
@@ -202,8 +202,8 @@ CREATE TABLE `students` (
 --
 
 INSERT INTO `students` (`sid`, `name`, `tel`, `birthday`, `GPA`) VALUES
-('0001', 'Roger', '0912345567', '2005-04-08 00:00:00', 87.6667),
-('0002', '徐御丰', '0912345678', '2005-05-15 00:00:00', 88.5),
+('0001', 'Roger', '0912345567', '2005-04-08 00:00:00', 3.85),
+('0002', '徐御丰', '0912345678', '2005-05-15 00:00:00', 4.3),
 ('0003', '豬哥亮', '0923456789', '2005-06-20 00:00:00', NULL),
 ('0004', '李多慧', '0934567890', '2005-07-25 00:00:00', NULL),
 ('0005', '恐龍', '0945678901', '2005-08-30 00:00:00', NULL);
@@ -226,11 +226,12 @@ CREATE TABLE `student_grades` (
 --
 
 INSERT INTO `student_grades` (`sid`, `c_no`, `exam_type`, `score`) VALUES
-('0001', 'CS101', '期中', 85),
-('0001', 'CS101', '期末', 90),
+('0001', 'CS101', '期中', 80),
+('0001', 'CS101', '期末', 80),
 ('0001', 'CS102', '期中', 88),
-('0002', 'CS101', '期中', 92),
-('0002', 'CS201', '期中', 85);
+('0002', 'CS101', '期中', 90),
+('0002', 'CS101', '期末', 90),
+('0002', 'CS201', '期中', 90);
 
 --
 -- 觸發器 `student_grades`
@@ -238,10 +239,79 @@ INSERT INTO `student_grades` (`sid`, `c_no`, `exam_type`, `score`) VALUES
 DELIMITER $$
 CREATE TRIGGER `update_gpa` AFTER INSERT ON `student_grades` FOR EACH ROW BEGIN
     DECLARE new_gpa FLOAT;
+    
     -- 計算該學生的最新 GPA
-    SELECT AVG(score) INTO new_gpa
-    FROM student_grades
+    SELECT 
+        COALESCE(
+            SUM(
+                credits * 
+                CASE 
+                    WHEN avg_score >= 90 THEN 4.3
+                    WHEN avg_score >= 85 THEN 4.0
+                    WHEN avg_score >= 80 THEN 3.7
+                    WHEN avg_score >= 77 THEN 3.3
+                    WHEN avg_score >= 73 THEN 3.0
+                    WHEN avg_score >= 70 THEN 2.7
+                    WHEN avg_score >= 67 THEN 2.3
+                    WHEN avg_score >= 63 THEN 2.0
+                    WHEN avg_score >= 60 THEN 1.7
+                    WHEN avg_score >= 50 THEN 1.0
+                    ELSE 0
+                END
+            ) / SUM(credits), 
+            0
+        ) INTO new_gpa
+    FROM 
+        (SELECT 
+            c.c_no,
+            c.credits,
+            AVG(student_grades.score) as avg_score
+         FROM student_grades
+         JOIN courses c ON student_grades.c_no = c.c_no
+         WHERE student_grades.sid = NEW.sid
+         GROUP BY c.c_no, c.credits) as course_scores;
+
+    -- 更新 students 表中的 GPA 欄位
+    UPDATE students
+    SET GPA = new_gpa
     WHERE sid = NEW.sid;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `update_gpa_after_update` AFTER UPDATE ON `student_grades` FOR EACH ROW BEGIN
+    DECLARE new_gpa FLOAT;
+    
+    -- 計算該學生的最新 GPA
+    SELECT 
+        COALESCE(
+            SUM(
+                credits * 
+                CASE 
+                    WHEN avg_score >= 90 THEN 4.3
+                    WHEN avg_score >= 85 THEN 4.0
+                    WHEN avg_score >= 80 THEN 3.7
+                    WHEN avg_score >= 77 THEN 3.3
+                    WHEN avg_score >= 73 THEN 3.0
+                    WHEN avg_score >= 70 THEN 2.7
+                    WHEN avg_score >= 67 THEN 2.3
+                    WHEN avg_score >= 63 THEN 2.0
+                    WHEN avg_score >= 60 THEN 1.7
+                    WHEN avg_score >= 50 THEN 1.0
+                    ELSE 0
+                END
+            ) / SUM(credits), 
+            0
+        ) INTO new_gpa
+    FROM 
+        (SELECT 
+            c.c_no,
+            c.credits,
+            AVG(student_grades.score) as avg_score
+         FROM student_grades
+         JOIN courses c ON student_grades.c_no = c.c_no
+         WHERE student_grades.sid = NEW.sid
+         GROUP BY c.c_no, c.credits) as course_scores;
 
     -- 更新 students 表中的 GPA 欄位
     UPDATE students
@@ -353,7 +423,7 @@ ALTER TABLE `usr`
 -- 使用資料表自動遞增(AUTO_INCREMENT) `record`
 --
 ALTER TABLE `record`
-  MODIFY `r_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `r_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- 已傾印資料表的限制式
