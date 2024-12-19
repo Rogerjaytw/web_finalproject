@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成績查詢</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .back-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .back-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h2>成績查詢結果</h2>
+    <div id="score-list">
+        <!-- 成績將由 PHP 動態插入 -->
+    </div>
+    <div id="gpa">
+        <!-- GPA 將由 PHP 動態插入 -->
+    </div>
+
+    <script>
+        window.onload = function() {
+            fetch('score.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('網路回應不正常');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('收到的數據:', data);
+                    
+                    if (!data || !Array.isArray(data.scores)) {
+                        throw new Error('數據格式不正確');
+                    }
+
+                    if (data.scores.length === 0) {
+                        // 如果沒有成績資料
+                        document.getElementById('score-list').innerHTML = 
+                            '<div style="text-align: center; padding: 20px; color: #666;">查無成績資料</div>';
+                    } else {
+                        // 有成績資料時顯示成績表
+                        displayScores(data.scores);
+                    }
+                    
+                    // 顯示 GPA（如果有的話）
+                    if (data.gpa !== null) {
+                        document.getElementById('gpa').innerHTML = 
+                            `<p>目前GPA：${data.gpa}</p>`;
+                    } else {
+                        document.getElementById('gpa').innerHTML = 
+                            '<p>目前GPA：尚無資料</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('錯誤詳情:', error);
+                    document.getElementById('score-list').innerHTML = 
+                        '<div style="text-align: center; padding: 20px; color: #666;">查無成績資料</div>';
+                    document.getElementById('gpa').innerHTML = 
+                        '<p>目前GPA：尚無資料</p>';
+                });
+        }
+
+        function displayScores(scores) {
+            let html = `<table>
+                <tr>
+                    <th>學期</th>
+                    <th>課程名稱</th>
+                    <th>考試類型</th>
+                    <th>分數</th>
+                </tr>`;
+            
+            scores.forEach(score => {
+                html += `<tr>
+                    <td>${score.semester}</td>
+                    <td>${score.title}</td>
+                    <td>${score.exam_type}</td>
+                    <td>${score.score}</td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+            document.getElementById('score-list').innerHTML = html;
+        }
+    </script>
+    <a href="main.html" class="back-button">返回主選單</a>
+</body>
+</html>

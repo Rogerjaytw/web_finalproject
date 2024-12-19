@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>獎懲管理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .form-section, .list-section {
+            flex: 1;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .edit-btn, .delete-btn {
+            padding: 5px 10px;
+            margin: 0 2px;
+        }
+        .delete-btn {
+            background-color: #f44336;
+        }
+        .back-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <a href="main.html" class="back-button">返回主選單</a>
+    <h2>獎懲管理系統</h2>
+    
+    <div class="container">
+        <div class="form-section">
+            <h3>新增/修改獎懲記錄</h3>
+            <form id="recordForm">
+                <input type="hidden" id="r_id" name="r_id">
+                <div class="form-group">
+                    <label for="sid">學號：</label>
+                    <input type="text" id="sid" name="sid" required>
+                </div>
+                <div class="form-group">
+                    <label for="award_type">獎懲類型：</label>
+                    <select id="award_type" name="award_type" required>
+                        <option value="嘉獎">嘉獎</option>
+                        <option value="小功">小功</option>
+                        <option value="大功">大功</option>
+                        <option value="警告">警告</option>
+                        <option value="小過">小過</option>
+                        <option value="大過">大過</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">次數：</label>
+                    <input type="number" id="quantity" name="quantity" required min="1" max="3">
+                </div>
+                <div class="form-group">
+                    <label for="description">事由：</label>
+                    <textarea id="description" name="description" required></textarea>
+                </div>
+                <button type="submit">儲存</button>
+                <button type="button" onclick="resetForm()">取消</button>
+            </form>
+        </div>
+
+        <div class="list-section">
+            <h3>獎懲記錄列表</h3>
+            <div id="recordList"></div>
+        </div>
+    </div>
+
+    <script>
+        // 載入所有記錄
+        function loadRecords() {
+            fetch('record.php')
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.createElement('table');
+                    table.innerHTML = `
+                        <tr>
+                            <th>學號</th>
+                            <th>姓名</th>
+                            <th>獎懲類型</th>
+                            <th>次數</th>
+                            <th>事由</th>
+                            <th>日期</th>
+                            <th>操作</th>
+                        </tr>
+                    `;
+                    
+                    data.forEach(record => {
+                        const row = table.insertRow();
+                        row.innerHTML = `
+                            <td>${record.sid}</td>
+                            <td>${record.name}</td>
+                            <td>${record.award_type}</td>
+                            <td>${record.quantity}</td>
+                            <td>${record.description}</td>
+                            <td>${record.award_date}</td>
+                            <td>
+                                <button class="edit-btn" onclick="editRecord(${record.r_id})">修改</button>
+                                <button class="delete-btn" onclick="deleteRecord(${record.r_id})">刪除</button>
+                            </td>
+                        `;
+                    });
+                    
+                    document.getElementById('recordList').innerHTML = '';
+                    document.getElementById('recordList').appendChild(table);
+                });
+        }
+
+        // 表單提交
+        document.getElementById('recordForm').onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            fetch('record.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('儲存成功！');
+                    resetForm();
+                    loadRecords();
+                } else {
+                    alert(data.message || '儲存失敗！');
+                }
+            });
+        };
+
+        // 編輯記錄
+        function editRecord(r_id) {
+            fetch(`record.php?r_id=${r_id}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('r_id').value = data.r_id;
+                    document.getElementById('sid').value = data.sid;
+                    document.getElementById('award_type').value = data.award_type;
+                    document.getElementById('quantity').value = data.quantity;
+                    document.getElementById('description').value = data.description;
+                });
+        }
+
+        // 刪除記錄
+        function deleteRecord(r_id) {
+            if (confirm('確定要刪除此記錄嗎？')) {
+                fetch('record.php', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ r_id: r_id })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('刪除成功！');
+                        loadRecords();
+                    } else {
+                        alert(data.message || '刪除失敗！');
+                    }
+                });
+            }
+        }
+
+        // 重置表單
+        function resetForm() {
+            document.getElementById('recordForm').reset();
+            document.getElementById('r_id').value = '';
+        }
+
+        // 頁面載入時顯示記錄
+        window.onload = loadRecords;
+    </script>
+</body>
+</html>

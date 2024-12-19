@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程查詢與選課</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .credits-info {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        hr {
+            margin: 20px 0;
+        }
+        .back-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .back-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <a href="main.html" class="back-button">返回主選單</a>
+    <h2>已選課程</h2>
+    <div id="enrolled-courses">
+        <!-- 已選課程將由 PHP 動態插入 -->
+    </div>
+
+    <div class="credits-info" id="total-credits">
+        <!-- 總學分數將由 PHP 動態插入 -->
+    </div>
+
+    <hr>
+
+    <h2>可選課程</h2>
+    <div id="available-courses">
+        <!-- 可選課程將由 PHP 動態插入 -->
+    </div>
+
+    <script>
+        window.onload = function() {
+            fetch('course.php')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Received data:', data); // 添加調試輸出
+                    displayEnrolledCourses(data.enrolled, data.totalCredits);
+                    displayAvailableCourses(data.available);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function displayEnrolledCourses(courses, totalCredits) {
+            let html = '';
+            if (courses.length === 0) {
+                html = '<p>目前沒有已選課程</p>';
+            } else {
+                html = `<table>
+                    <tr>
+                        <th>課程代號</th>
+                        <th>課程名稱</th>
+                        <th>學分</th>
+                        <th>學期</th>
+                        <th>星期</th>
+                        <th>時間</th>
+                        <th>教師</th>
+                        <th>操作</th>
+                    </tr>`;
+                
+                courses.forEach(course => {
+                    html += `<tr>
+                        <td>${course.c_no}</td>
+                        <td>${course.title}</td>
+                        <td>${course.credits}</td>
+                        <td>${course.semester}</td>
+                        <td>${course.day_of_week}</td>
+                        <td>${course.start_time}-${course.end_time}</td>
+                        <td>${course.instructor_name || '未指定'}</td>
+                        <td>
+                            <form action="drop_course.php" method="post">
+                                <input type="hidden" name="c_no" value="${course.c_no}">
+                                <button type="submit">退選</button>
+                            </form>
+                        </td>
+                    </tr>`;
+                });
+                html += '</table>';
+                html += `<div class="credits-info">總學分數：${totalCredits}</div>`;
+            }
+            document.getElementById('enrolled-courses').innerHTML = html;
+        }
+
+        function displayAvailableCourses(courses) {
+            let html = '';
+            if (courses.length === 0) {
+                html = '<p>目前沒有可選課程</p>';
+            } else {
+                html = `<table>
+                    <tr>
+                        <th>課程代號</th>
+                        <th>課程名稱</th>
+                        <th>學分</th>
+                        <th>學期</th>
+                        <th>星期</th>
+                        <th>時間</th>
+                        <th>教師</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                    </tr>`;
+                
+                courses.forEach(course => {
+                    html += `<tr>
+                        <td>${course.c_no}</td>
+                        <td>${course.title}</td>
+                        <td>${course.credits}</td>
+                        <td>${course.semester}</td>
+                        <td>${course.day_of_week}</td>
+                        <td>${course.start_time}-${course.end_time}</td>
+                        <td>${course.instructor_name || '未指定'}</td>
+                        <td>${course.enrollment_status}</td>
+                        <td>
+                            ${course.enrollment_status === '未選' ? `
+                                <form action="enroll_course.php" method="post">
+                                    <input type="hidden" name="c_no" value="${course.c_no}">
+                                    <input type="hidden" name="semester" value="${course.semester}">
+                                    <button type="submit">選課</button>
+                                </form>
+                            ` : ''}
+                        </td>
+                    </tr>`;
+                });
+                html += '</table>';
+            }
+            document.getElementById('available-courses').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
