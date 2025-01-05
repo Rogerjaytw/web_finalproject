@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>成績登入</title>
+    <!-- Bootstrap 5 CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        background-color: #eaf6ff;
+      }
+      .card {
+        border: none;
+        border-radius: 8px;
+      }
+      .btn-cool {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+        transition: 0.3s;
+      }
+      .btn-cool:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container my-5">
+      <div class="row justify-content-center align-items-center">
+        <div class="col-md-10 col-lg-8">
+          <div class="card shadow">
+            <div class="card-body p-4">
+              <h3 class="text-center mb-4">成績登入系統</h3>
+              <a href="main.php" class="btn btn-cool mb-4">返回主選單</a>
+
+              <!-- 課程選擇 -->
+              <div class="course-select mb-4">
+                <label for="course">選擇課程：</label>
+                <select id="course" class="form-select" onchange="loadStudents()">
+                  <option value="">請選擇課程</option>
+                </select>
+              </div>
+
+              <!-- 學生列表 -->
+              <div id="student-list">
+                <!-- 學生列表將動態載入 -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    ></script>
+    <script>
+      window.onload = function() {
+        fetch('score.php')
+          .then(response => response.json())
+          .then(data => {
+            const select = document.getElementById('course');
+            data.courses.forEach(course => {
+              const option = document.createElement('option');
+              option.value = course.c_no;
+              option.textContent = `${course.c_no} - ${course.title}`;
+              select.appendChild(option);
+            });
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('載入課程失敗！');
+          });
+      }
+
+      function loadStudents() {
+        const c_no = document.getElementById('course').value;
+        const studentList = document.getElementById('student-list');
+
+        if (!c_no) {
+          studentList.innerHTML = '';
+          return;
+        }
+
+        fetch(`score.php?c_no=${c_no}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.message) {
+              studentList.innerHTML = `<p class="message">${data.message}</p>`;
+            } else if (data.students) {
+              displayStudents(data.students);
+            } else {
+              console.error('Unexpected data format:', data);
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            studentList.innerHTML = '<p class="error">載入學生資料失敗</p>';
+          });
+      }
+
+      function displayStudents(students) {
+        if (!Array.isArray(students) || students.length === 0) {
+          document.getElementById('student-list').innerHTML = '<p class="message">尚未有人選修</p>';
+          return;
+        }
+
+        const table = document.createElement('table');
+        table.classList.add('table', 'table-striped', 'table-hover');
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>學號</th>
+              <th>姓名</th>
+              <th>期中考</th>
+              <th>期末考</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${students.map(student => `
+              <tr>
+                <td>${student.sid}</td>
+                <td>${student.name}</td>
+                <td>
+                  <input type="number" class="score-input form-control" 
+                         value="${student.midterm || ''}" 
+                         id="midterm_${student.sid}" 
+                         min="0" max="100">
+                </td>
+                <td>
+                  <input type="number" class="score-input form-control" 
+                         value="${student.final || ''}" 
+                         id="final_${student.sid}" 
+                         min="0" max="100">
+                </td>
+                <td>
+                  <button class="btn btn-cool btn-sm" 
+                          onclick="saveScores('${student.sid}')">
+                    ${student.midterm || student.final ? '修改成績' : '儲存成績'}
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        `;
+        document.getElementById('student-list').innerHTML = '';
+        document.getElementById('student-list').appendChild(table);
+      }
+
+      function saveScores(sid) {
+        const c_no = document.getElementById('course').value;
+        const midterm = document.getElementById(`midterm_${sid}`).value;
+        const final = document.getElementById(`final_${sid}`).value;
+
+        if ((midterm && (midterm < 0 || midterm > 100)) || 
+            (final && (final < 0 || final > 100))) {
+          alert('成績必須在 0-100 之間！');
+          return;
+        }
+
+        fetch('score.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sid, c_no, midterm: midterm || null, final: final || null })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('成績儲存成功！');
+            loadStudents();
+          } else {
+            alert(data.message || '成績儲存失敗！');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('儲存失敗，請稍後再試！');
+        });
+      }
+    </script>
+  </body>
+</html>

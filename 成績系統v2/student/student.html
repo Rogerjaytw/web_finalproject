@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>個人資料管理</title>
+    <!-- Bootstrap 5 CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        background-color: #eaf6ff;
+      }
+      .card {
+        border-radius: 12px;
+      }
+      .btn-cool {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+        transition: 0.3s;
+      }
+      .btn-cool:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+      }
+      .back-button {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .back-button:hover {
+        background-color: #0b5ed7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container py-5">
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+          <div class="card shadow">
+            <div class="card-body p-4">
+              <h3 class="text-center mb-4">個人資料管理</h3>
+              <form id="profileForm">
+                <div class="mb-3">
+                  <label for="name" class="form-label">姓名</label>
+                  <input type="text" class="form-control" id="name" name="name" readonly />
+                </div>
+                <div class="mb-3">
+                  <label for="sid" class="form-label">學號</label>
+                  <input type="text" class="form-control" id="sid" name="sid" readonly />
+                </div>
+                <div class="mb-3">
+                  <label for="tel" class="form-label">電話</label>
+                  <input type="tel" class="form-control" id="tel" name="tel" required />
+                </div>
+                <div class="mb-3">
+                  <label for="birthday" class="form-label">生日</label>
+                  <input type="date" class="form-control" id="birthday" name="birthday" required />
+                </div>
+                <div class="mb-3">
+                  <label for="oldPassword" class="form-label">目前密碼</label>
+                  <input type="password" class="form-control" id="oldPassword" name="oldPassword" required />
+                </div>
+                <div class="mb-3">
+                  <label for="newPassword" class="form-label">新密碼 (如不修改請留空)</label>
+                  <input type="password" class="form-control" id="newPassword" name="newPassword" />
+                </div>
+                <div class="mb-3">
+                  <label for="confirmPassword" class="form-label">確認新密碼</label>
+                  <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" />
+                </div>
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-cool">儲存修改</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a href="main.php" class="back-button">返回主選單</a>
+
+    <!-- Bootstrap 5 JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    ></script>
+    <script>
+      // 載入個人資料
+      window.onload = function() {
+        fetch('student.php')
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById('name').value = data.name;
+            document.getElementById('sid').value = data.sid;
+            document.getElementById('tel').value = data.tel;
+            document.getElementById('birthday').value = data.birthday.split(' ')[0];
+          });
+      };
+
+      // 表單提交
+      document.getElementById('profileForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // 檢查新密碼
+        if (document.getElementById('newPassword').value !== document.getElementById('confirmPassword').value) {
+          alert('新密碼與確認密碼不符！');
+          return;
+        }
+
+        // 收集表單數據
+        const formData = new FormData(this);
+
+        // 發送更新請求
+        fetch('student.php', {
+          method: 'POST',
+          body: formData
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('資料更新成功！');
+              window.location.reload();
+            } else {
+              alert(data.message || '更新失敗！');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('發生錯誤，請稍後再試！');
+          });
+      });
+    </script>
+  </body>
+</html>

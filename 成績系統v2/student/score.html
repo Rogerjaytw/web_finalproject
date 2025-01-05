@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>成績查詢</title>
+    <!-- Bootstrap 5 CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        background-color: #eaf6ff;
+      }
+      .card {
+        border-radius: 12px;
+      }
+      .btn-cool {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+        transition: 0.3s;
+      }
+      .btn-cool:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+      }
+      .back-button {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .back-button:hover {
+        background-color: #0b5ed7;
+      }
+      .score-card {
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="main.php" class="back-button">返回主選單</a>
+    <div class="container py-5">
+      <h2 class="mb-4">成績查詢結果</h2>
+      <div id="score-list" class="row row-cols-1 row-cols-md-2 g-4">
+        <!-- 成績將由 PHP 動態插入 -->
+      </div>
+      <div id="gpa" class="row mt-4">
+        <div class="col-12">
+          <!-- GPA 將由 PHP 動態插入 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    ></script>
+    <script>
+      window.onload = function() {
+        fetch('score.php')
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('網路回應不正常');
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('收到的數據:', data);
+            
+            if (!data || !Array.isArray(data.scores)) {
+              throw new Error('數據格式不正確');
+            }
+
+            if (data.scores.length === 0) {
+              // 如果沒有成績資料
+              document.getElementById('score-list').innerHTML = 
+                '<div style="text-align: center; padding: 20px; color: #666;">查無成績資料</div>';
+            } else {
+              // 有成績資料時顯示成績卡片
+              displayScores(data.scores);
+            }
+            
+            // 顯示 GPA（如果有的話）
+            if (data.gpa !== null) {
+              document.getElementById('gpa').innerHTML = 
+                `<div class="card h-100 shadow-sm">
+                  <div class="card-body">
+                    <h5 class="card-title">目前GPA</h5>
+                    <p class="card-text"><strong>${data.gpa}</strong></p>
+                  </div>
+                </div>`;
+            } else {
+              document.getElementById('gpa').innerHTML = 
+                '<div class="card h-100 shadow-sm"><div class="card-body"><h5 class="card-title">目前GPA</h5><p class="card-text"><strong>尚無資料</strong></p></div></div>';
+            }
+          })
+          .catch(error => {
+            console.error('錯誤詳情:', error);
+            document.getElementById('score-list').innerHTML = 
+              '<div style="text-align: center; padding: 20px; color: #666;">查無成績資料</div>';
+            document.getElementById('gpa').innerHTML = 
+              '<div class="card h-100 shadow-sm"><div class="card-body"><h5 class="card-title">目前GPA</h5><p class="card-text"><strong>尚無資料</strong></p></div></div>';
+          });
+      }
+
+      function displayScores(scores) {
+        let html = '';
+        scores.forEach(score => {
+          html += `<div class="col">
+            <div class="card score-card h-100 shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">${score.title}</h5>
+                <p class="card-text">
+                  <strong>學期：</strong>${score.semester}<br>
+                  <strong>考試類型：</strong>${score.exam_type}<br>
+                  <strong>分數：</strong>${score.score}
+                </p>
+              </div>
+            </div>
+          </div>`;
+        });
+        document.getElementById('score-list').innerHTML = html;
+      }
+    </script>
+  </body>
+</html>
