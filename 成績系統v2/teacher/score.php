@@ -32,30 +32,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
         echo json_encode(['courses' => $courses]);
     } else {
+        // 檢查教師是否有權限查看此課程
+        $check_sql = "SELECT 1 FROM instructor_courses WHERE eid = ? AND c_no = ?";
+        $check_stmt = mysqli_prepare($link, $check_sql);
+        mysqli_stmt_bind_param($check_stmt, "ss", $_SESSION['eid'], $_GET['c_no']);
+        mysqli_stmt_execute($check_stmt);
+        $check_result = mysqli_stmt_get_result($check_stmt);
+        
+        if (mysqli_num_rows($check_result) == 0) {
+            echo json_encode(['message' => '您沒有權限查看此課程']);
+            exit();
+        }
+
         // 獲取特定課程的學生列表和成績
-        $sql = "SELECT s.sid, s.name, 
+        $sql = "SELECT DISTINCT s.sid, s.name, 
                 MAX(CASE WHEN sg.exam_type = '期中' THEN sg.score END) as midterm,
                 MAX(CASE WHEN sg.exam_type = '期末' THEN sg.score END) as final
                 FROM enrollments e 
                 JOIN students s ON e.sid = s.sid 
-                LEFT JOIN student_grades sg ON e.sid = sg.sid AND e.c_no = sg.c_no 
+                LEFT JOIN student_grades sg ON s.sid = sg.sid AND e.c_no = sg.c_no 
                 WHERE e.c_no = ? AND e.status = '已選'
                 GROUP BY s.sid, s.name
                 ORDER BY s.sid";
+        
+        error_log("教師ID: " . $_SESSION['eid']);
+        error_log("課程編號: " . $_GET['c_no']);
+        error_log("SQL查詢: " . $sql);
         
         $stmt = mysqli_prepare($link, $sql);
         mysqli_stmt_bind_param($stmt, "s", $_GET['c_no']);
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         
+        error_log("查詢結果數量: " . mysqli_num_rows($result));
+        
         if (mysqli_num_rows($result) == 0) {
-            echo json_encode(['message' => '尚未有人選修']);
+            // 檢查課程是否存在
+            $course_check = "SELECT 1 FROM courses WHERE c_no = ?";
+            $check_stmt = mysqli_prepare($link, $course_check);
+            mysqli_stmt_bind_param($check_stmt, "s", $_GET['c_no']);
+            mysqli_stmt_execute($check_stmt);
+            
+            if (mysqli_num_rows(mysqli_stmt_get_result($check_stmt)) == 0) {
+                echo json_encode(['message' => '課程不存在']);
+            } else {
+                echo json_encode(['message' => '尚未有人選修']);
+            }
             exit();
         }
         
         $students = [];
         while ($row = mysqli_fetch_assoc($result)) {
             $students[] = $row;
+            error_log("學生資料: " . print_r($row, true));
         }
         
         echo json_encode(['students' => $students]);

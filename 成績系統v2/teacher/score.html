@@ -88,15 +88,19 @@
           return;
         }
 
+        console.log('正在載入課程:', c_no);
+
         fetch(`score.php?c_no=${c_no}`)
           .then(response => response.json())
           .then(data => {
+            console.log('收到的數據:', data);
             if (data.message) {
               studentList.innerHTML = `<p class="message">${data.message}</p>`;
             } else if (data.students) {
+              console.log('學生數量:', data.students.length);
               displayStudents(data.students);
             } else {
-              console.error('Unexpected data format:', data);
+              console.error('意外的數據格式:', data);
             }
           })
           .catch(error => {
