@@ -1,449 +1,152 @@
 <!DOCTYPE html>
-<html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>課程管理</title>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>課程查詢與選課</title>
     <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <style>
-        body {
-            background-color: #eaf6ff;
-        }
-
-        .container {
-            margin-top: 2rem;
-        }
-
-        .card {
-            border: none;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .card-body {
-            padding: 2rem;
-        }
-
-        /* 按鈕樣式 */
-        .btn-cool {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-            color: #fff;
-            transition: 0.3s;
-        }
-
-        .btn-cool:hover {
-            background-color: #0b5ed7;
-            border-color: #0a58ca;
-            color: #fff;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            border-color: #dc3545;
-            color: #fff;
-            transition: 0.3s;
-        }
-
-        .btn-danger:hover {
-            background-color: #bb2d3b;
-            border-color: #b02a37;
-        }
-
-        /* 表格樣式 */
-        .table {
-            margin-bottom: 0;
-        }
-
-        .table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        /* 表單樣式 */
-        .form-label {
-            color: #2c3e50;
-            font-weight: 500;
-        }
-
-        .form-control, .form-select {
-            border-radius: 4px;
-            border: 1px solid #ced4da;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-
-        /* 標題樣式 */
-        h3, h4 {
-            color: #2c3e50;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-        }
-
-        /* 分隔線樣式 */
-        hr {
-            margin: 2rem 0;
-            opacity: 0.15;
-        }
+      body {
+        background-color: #eaf6ff;
+      }
+      .card {
+        border: none;
+        border-radius: 8px;
+      }
+      .btn-cool {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+        transition: 0.3s;
+      }
+      .btn-cool:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container my-5">
-        <div class="row justify-content-center">
-            <div class="col-md-10">
-                <div class="card shadow">
-                    <div class="card-body">
-                        <h3 class="text-center mb-4">課程管理系統</h3>
-                        <a href="main.php" class="btn btn-cool mb-4">返回主選單</a>
+      <div class="row justify-content-center align-items-center">
+        <div class="col-md-10 col-lg-8">
+          <div class="card shadow">
+            <div class="card-body p-4">
+              <h3 class="text-center mb-4">課程查詢與選課</h3>
 
-                        <!-- 建立新課程表單 -->
-                        <h4 class="mb-4">建立新課程</h4>
-                        <form id="courseForm">
-                            <div class="mb-3">
-                                <label for="c_no" class="form-label">課程代碼</label>
-                                <input type="text" class="form-control" id="c_no" name="c_no" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="title" class="form-label">課程名稱</label>
-                                <input type="text" class="form-control" id="title" name="title" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="credits" class="form-label">學分數</label>
-                                <input type="number" class="form-control" id="credits" name="credits" required min="0" max="6">
-                            </div>
-                            <div class="mb-3">
-                                <label for="semester" class="form-label">學期</label>
-                                <input type="text" class="form-control" id="semester" name="semester" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="day_of_week" class="form-label">上課星期</label>
-                                <select class="form-select" id="day_of_week" name="day_of_week" required>
-                                    <option value="1">星期一</option>
-                                    <option value="2">星期二</option>
-                                    <option value="3">星期三</option>
-                                    <option value="4">星期四</option>
-                                    <option value="5">星期五</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="start_time" class="form-label">開始時間</label>
-                                <input type="time" class="form-control" id="start_time" name="start_time" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="end_time" class="form-label">結束時間</label>
-                                <input type="time" class="form-control" id="end_time" name="end_time" required>
-                            </div>
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-cool">建立課程</button>
-                            </div>
-                        </form>
+              <!-- 已選課程 -->
+              <h4 class="mb-4">已選課程</h4>
+              <div id="enrolled-courses" class="mb-4">
+                <p>載入中...</p>
+              </div>
 
-                        <hr>
+              <!-- 總學分 -->
+              <div id="total-credits" class="mb-4"></div>
 
-                        <!-- 所有課程列表 -->
-                        <h4 class="mb-4">所有課程</h4>
-                        <div id="all-courses" class="table-responsive"></div>
+              <!-- 分隔線 -->
+              <hr />
 
-                        <hr>
-
-                        <!-- 我的課程列表 -->
-                        <h4 class="mb-4">我的課程</h4>
-                        <div id="my-courses" class="table-responsive"></div>
-                    </div>
-                </div>
+              <!-- 可選課程 -->
+              <h4 class="mb-4">可選課程</h4>
+              <div id="available-courses" class="mb-4">
+                <p>載入中...</p>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // 載入課程資訊
-        function loadCourses() {
-            fetch('course.php')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text(); // 先取得原始文本
-                })
-                .then(text => {
-                    console.log('Raw response:', text); // 調試用
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        throw new Error('Invalid JSON response: ' + e.message);
-                    }
-                })
-                .then(data => {
-                    console.log('Parsed data:', data); // 調試用
-                    if (!data.success) {
-                        throw new Error(data.message || '載入失敗');
-                    }
-                    
-                    if (!Array.isArray(data.allCourses) || !Array.isArray(data.myCourses)) {
-                        throw new Error('Invalid data structure');
-                    }
+      document.addEventListener("DOMContentLoaded", () => {
+        const enrolledCoursesDiv = document.getElementById("enrolled-courses");
+        const availableCoursesDiv = document.getElementById("available-courses");
+        const totalCreditsDiv = document.getElementById("total-credits");
 
-                    displayAllCourses(data.allCourses);
-                    displayMyCourses(data.myCourses);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    const errorMessage = `<div class="alert alert-danger">
-                        載入課程失敗: ${error.message}
-                    </div>`;
-                    document.getElementById('all-courses').innerHTML = errorMessage;
-                    document.getElementById('my-courses').innerHTML = errorMessage;
-                });
+        fetch("course.php")
+          .then((response) => response.json())
+          .then((data) => {
+            renderEnrolledCourses(data.enrolled, data.totalCredits);
+            renderAvailableCourses(data.available);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            enrolledCoursesDiv.innerHTML = "<p>載入已選課程失敗</p>";
+            availableCoursesDiv.innerHTML = "<p>載入可選課程失敗</p>";
+          });
+
+        function renderEnrolledCourses(courses, totalCredits) {
+          if (courses.length === 0) {
+            enrolledCoursesDiv.innerHTML = "<p>目前沒有已選課程</p>";
+            totalCreditsDiv.innerHTML = "";
+            return;
+          }
+          const courseHTML = courses
+            .map(
+              (course) => `
+              <div class="card mb-3">
+                <div class="card-body">
+                  <h5 class="card-title">${course.title}</h5>
+                  <p class="card-text">
+                    <strong>課程代號：</strong>${course.c_no}<br>
+                    <strong>學分：</strong>${course.credits}<br>
+                    <strong>學期：</strong>${course.semester}<br>
+                    <strong>時間：</strong>${course.day_of_week} ${course.start_time}-${course.end_time}<br>
+                    <strong>教師：</strong>${course.instructor_name || "未指定"}
+                  </p>
+                  <form action="drop_course.php" method="post">
+                    <input type="hidden" name="c_no" value="${course.c_no}">
+                    <button type="submit" class="btn btn-danger-custom btn-sm">退選</button>
+                  </form>
+                </div>
+              </div>
+            `
+            )
+            .join("");
+          enrolledCoursesDiv.innerHTML = courseHTML;
+          totalCreditsDiv.innerHTML = `<p><strong>總學分：</strong>${totalCredits}</p>`;
         }
 
-        // 顯示所有課程
-        function displayAllCourses(courses) {
-            try {
-                const tableHtml = `
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>課程代碼</th>
-                                <th>課程名稱</th>
-                                <th>學分</th>
-                                <th>學期</th>
-                                <th>上課時間</th>
-                                <th>授課教師</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${courses.map(course => {
-                                const safeGet = (value) => value === null || value === undefined ? '' : value;
-                                return `
-                                    <tr>
-                                        <td>${safeGet(course.c_no)}</td>
-                                        <td>${safeGet(course.title)}</td>
-                                        <td>${safeGet(course.credits)}</td>
-                                        <td>${safeGet(course.semester)}</td>
-                                        <td>${safeGet(course.day_of_week)} ${safeGet(course.start_time)}-${safeGet(course.end_time)}</td>
-                                        <td>${safeGet(course.instructor_names)}</td>
-                                        <td>
-                                            ${course.is_teaching ? 
-                                                '<span class="text-success">已加入</span>' : 
-                                                `<button class="btn btn-cool btn-sm" onclick="joinCourse('${safeGet(course.c_no)}')">加入授課</button>`
-                                            }
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                `;
-                document.getElementById('all-courses').innerHTML = tableHtml;
-            } catch (error) {
-                console.error('Error in displayAllCourses:', error);
-                document.getElementById('all-courses').innerHTML = 
-                    `<div class="alert alert-danger">顯示課程失敗: ${error.message}</div>`;
-            }
+        function renderAvailableCourses(courses) {
+          if (courses.length === 0) {
+            availableCoursesDiv.innerHTML = "<p>目前沒有可選課程</p>";
+            return;
+          }
+          const courseHTML = courses
+            .map(
+              (course) => `
+              <div class="card mb-3">
+                <div class="card-body">
+                  <h5 class="card-title">${course.title}</h5>
+                  <p class="card-text">
+                    <strong>課程代號：</strong>${course.c_no}<br>
+                    <strong>學分：</strong>${course.credits}<br>
+                    <strong>學期：</strong>${course.semester}<br>
+                    <strong>時間：</strong>${course.day_of_week} ${course.start_time}-${course.end_time}<br>
+                    <strong>教師：</strong>${course.instructor_name || "未指定"}<br>
+                    <strong>狀態：</strong>${course.enrollment_status}
+                  </p>
+                  ${
+                    course.enrollment_status === "未選"
+                      ? `
+                      <form action="enroll_course.php" method="post">
+                        <input type="hidden" name="c_no" value="${course.c_no}">
+                        <button type="submit" class="btn btn-primary-custom btn-sm">選課</button>
+                      </form>
+                    `
+                      : ""
+                  }
+                </div>
+              </div>
+            `
+            )
+            .join("");
+          availableCoursesDiv.innerHTML = courseHTML;
         }
-
-        // 顯示我的課程
-        function displayMyCourses(courses) {
-            const table = document.createElement('table');
-            table.className = 'table table-striped';
-            table.innerHTML = `
-                <thead>
-                    <tr>
-                        <th>班級</th>
-                        <th>課程名稱</th>
-                        <th>學分數</th>
-                        <th>學期</th>
-                        <th>上課時間</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${courses.map(course => `
-                        <tr>
-                            <td>${course.c_no}</td>
-                            <td>${course.title}</td>
-                            <td>${course.credits}</td>
-                            <td>${course.semester}</td>
-                            <td>${course.day_of_week} ${course.start_time}-${course.end_time}</td>
-                            <td>
-                                <button class="btn btn-warning btn-sm" onclick="editCourse('${course.c_no}')">修改</button>
-                                ${course.instructor_count <= 1 
-                                    ? `<button class="btn btn-danger btn-sm" onclick="deleteCourse('${course.c_no}')">刪除</button>`
-                                    : `<button class="btn btn-secondary btn-sm" onclick="leaveCourse('${course.c_no}')">退出</button>`
-                                }
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            `;
-            
-            document.getElementById('my-courses').innerHTML = '';
-            document.getElementById('my-courses').appendChild(table);
-        }
-
-        // 處理表單提交
-        document.getElementById('courseForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const data = {
-                c_no: formData.get('c_no'),
-                title: formData.get('title'),
-                credits: formData.get('credits'),
-                semester: formData.get('semester'),
-                day_of_week: formData.get('day_of_week'),
-                start_time: formData.get('start_time'),
-                end_time: formData.get('end_time')
-            };
-
-            console.log('Submitting data:', data); // 調試用
-
-            fetch('course.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('課程更新成功！');
-                    this.reset();
-                    loadCourses();
-                } else {
-                    alert(data.message || '課程更新失敗！');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('發生錯誤，請稍後再試！');
-            });
-        });
-
-        // 加入課程
-        function joinCourse(c_no) {
-            if (confirm('確定要加入此課程嗎？')) {
-                fetch('course.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'join',
-                        c_no: c_no
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('成功加入課程！');
-                        loadCourses();
-                    } else {
-                        alert(data.message || '加入課程失敗！');
-                    }
-                });
-            }
-        }
-
-        // 退出課程
-        function leaveCourse(c_no) {
-            if (confirm('確定要退出此課程嗎？')) {
-                fetch('course.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'leave',
-                        c_no: c_no
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('成功退出課程！');
-                        loadCourses();
-                    } else {
-                        alert(data.message || '退出課程失敗！');
-                    }
-                });
-            }
-        }
-
-        // 編輯課程
-        function editCourse(c_no) {
-            console.log('Editing course:', c_no); // 調試用
-            
-            fetch(`course.php?c_no=${c_no}`)
-                .then(response => {
-                    console.log('Raw response:', response); // 調試用
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Received course data:', data); // 調試用
-                    
-                    if (data.success && data.data) {
-                        const course = data.data;
-                        // 確保所有欄位都有值
-                        document.getElementById('c_no').value = course.c_no || '';
-                        document.getElementById('title').value = course.title || '';
-                        document.getElementById('credits').value = course.credits || '';
-                        document.getElementById('semester').value = course.semester || '';
-                        document.getElementById('day_of_week').value = course.day_of_week || '';
-                        document.getElementById('start_time').value = course.start_time || '';
-                        document.getElementById('end_time').value = course.end_time || '';
-                        
-                        document.getElementById('courseForm').scrollIntoView({ behavior: 'smooth' });
-                    } else {
-                        throw new Error(data.message || '無法獲取課程資訊');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('獲取課程資訊失敗：' + error.message);
-                });
-        }
-
-        // 頁面載入時顯示課程
-        window.onload = loadCourses;
-
-        function deleteCourse(c_no) {
-            if (confirm('確定要刪除此課程嗎？這將會刪除所有相關的選課記錄！')) {
-                fetch('course.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'delete',
-                        c_no: c_no
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('課程已成功刪除！');
-                        loadCourses();
-                    } else {
-                        alert(data.message || '刪除課程失敗！');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('發生錯誤，請稍後再試！');
-                });
-            }
-        }
+      });
     </script>
 </body>
 </html>
